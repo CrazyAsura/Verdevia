@@ -1,0 +1,68 @@
+services:
+  backend:
+    build:
+      context: ./VERDEVIA-BACKEND
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-BACKEND/.env
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=false
+      - WATCHPACK_POLLING=false
+      - KAFKA_ENABLED=${KAFKA_ENABLED:-false}
+      - KAFKA_CONSUMER_ENABLED=${KAFKA_CONSUMER_ENABLED:-false}
+      - MONGODB_ENABLED=${MONGODB_ENABLED:-false}
+      - AI_GATEWAY_URL=${AI_GATEWAY_URL:-http://fastapi-ai-gateway:8000}
+      - AI_GATEWAY_TIMEOUT_MS=${AI_GATEWAY_TIMEOUT_MS:-120000}
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-BACKEND
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - database/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json
+  frontend:
+    build:
+      context: ./VERDEVIA-WEB
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-WEB/.env
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=false
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-WEB
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - .next/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json

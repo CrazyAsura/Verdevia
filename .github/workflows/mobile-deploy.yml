@@ -1,0 +1,80 @@
+name: 🛸 Antigravity Mobile CD & Sync
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'ECOA-MOBILE/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: 🏗️ Build & Sync APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Essencial para permitir o commit automático
+    steps:
+      - name: 🔍 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ECOA-MOBILE/package-lock.json
+
+      - name: 🏗️ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install Dependencies
+        working-directory: ./ECOA-MOBILE
+        run: npm install
+
+      - name: 🤖 Build Android (APK)
+        id: build_android
+        working-directory: ./ECOA-MOBILE
+        run: |
+          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --wait --json)
+          APK_URL=$(echo $BUILD_OUTPUT | jq -r '.[0].artifacts.buildUrl')
+          echo "APK_URL=$APK_URL" >> $GITHUB_ENV
+          echo "✅ Android Build URL capturada."
+
+      - name: 🍎 Build iOS (IPA)
+        id: build_ios
+        continue-on-error: true # Permite que o Android funcione mesmo se o iOS falhar (credenciais Apple)
+        working-directory: ./ECOA-MOBILE
+        run: |
+          BUILD_OUTPUT=$(eas build --platform ios --profile preview --non-interactive --wait --json)
+          IPA_URL=$(echo $BUILD_OUTPUT | jq -r '.[0].artifacts.buildUrl')
+          echo "IPA_URL=$IPA_URL" >> $GITHUB_ENV
+          echo "✅ iOS Build URL capturada."
+
+      - name: 📥 Sync Artifacts to Web Public
+        run: |
+          mkdir -p ECOA-WEB/public
+          
+          # Sync Android
+          if [ ! -z "${{ env.APK_URL }}" ]; then
+            curl -L "${{ env.APK_URL }}" -o ECOA-WEB/public/ecoa.apk
+            echo "✅ ecoa.apk sincronizado."
+          fi
+          
+          # Sync iOS
+          if [ ! -z "${{ env.IPA_URL }}" ]; then
+            curl -L "${{ env.IPA_URL }}" -o ECOA-WEB/public/ecoa.ipa
+            echo "✅ ecoa.ipa sincronizado."
+          fi
+
+      - name: 📝 Auto Commit Artifacts
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(mobile): 🛸 update mobile artifacts (apk/ipa) [skip ci]"
+          file_pattern: 'ECOA-WEB/public/ecoa.apk ECOA-WEB/public/ecoa.ipa'
+          commit_user_name: Antigravity Bot
+          commit_user_email: antigravity-bot@google.com

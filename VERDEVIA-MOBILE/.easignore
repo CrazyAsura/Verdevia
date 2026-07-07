@@ -1,0 +1,7 @@
+node_modules
+.expo
+dist
+__gluestack_temp__
+.env
+*.apk
+*.aab

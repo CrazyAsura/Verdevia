@@ -1,0 +1,86 @@
+include:
+  - path: ./VERDEVIA-BACKEND/docker-compose.yml
+  - path: ./VERDEVIA-WEB/docker-compose.yml
+
+services:
+  # ── FastAPI AI Gateway (LangGraph + LangChain gateway to host Ollama)
+  fastapi-ai-gateway:
+    build:
+      context: ./VERDEVIA-AI-GATEWAY
+      dockerfile: Dockerfile
+      args:
+        - PIP_INDEX_URL=${PIP_INDEX_URL:-https://pypi.org/simple}
+        - PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST:-pypi.org files.pythonhosted.org pypi.python.org}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: verdevia_fastapi_ai_gateway
+    env_file:
+      - ./VERDEVIA-AI-GATEWAY/.env
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma:e2b}
+      OLLAMA_FALLBACK_MODEL: ${OLLAMA_FALLBACK_MODEL:-gemma4:e2b}
+      AI_GATEWAY_LOG_LEVEL: ${AI_GATEWAY_LOG_LEVEL:-INFO}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - verdevia_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Nginx Gateway (SSL/TLS Reverse Proxy Ingress)
+  nginx:
+    image: nginx:alpine
+    container_name: verdevia_nginx
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./VERDEVIA-WEB/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./VERDEVIA-WEB/nginx/certs:/etc/nginx/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - verdevia_network
+
+  # ── Secure Ngrok Tunnel (Terminates on Nginx SSL Gateway)
+  tunnel:
+    image: ngrok/ngrok:latest
+    container_name: verdevia_tunnel
+    env_file:
+      - ./VERDEVIA-BACKEND/.env
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 10s
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN:-}
+    command:
+      - "http"
+      - "https://nginx:443"
+      - "--domain=${NGROK_DOMAIN:-}"
+      - "--upstream-tls-verify=false"
+    networks:
+      - verdevia_network
+
+networks:
+  verdevia_network:
+    name: verdevia_network
+    driver: bridge

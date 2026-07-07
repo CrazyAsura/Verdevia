@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.npm
+.yarn/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+android/
+ios/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Backend / NestJS
+dist/
+artifacts/
+*.sqlite
+database.sqlite
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.log
+
+# Docker
+.dockercache

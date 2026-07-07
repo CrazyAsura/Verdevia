@@ -1,0 +1,678 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AchievementType {
+  date: String
+  icon: String!
+  id: ID!
+  isLocked: Boolean!
+  name: String!
+  progress: Int
+  status: String!
+}
+
+input AddressInput {
+  city: String!
+  country: String!
+  district: String!
+  number: String
+  state: String!
+  street: String!
+  zipCode: String!
+}
+
+type AddressType {
+  city: String
+  country: String
+  district: String
+  number: String
+  state: String
+  street: String
+  zipCode: String
+}
+
+type AuditLogType {
+  action: String!
+  createdAt: DateTime!
+  id: ID!
+  ip: String
+  route: String
+  userAgent: String
+  userId: String
+  userName: String
+}
+
+type AuditLogsType {
+  lastPage: Int!
+  logs: [AuditLogType!]!
+  page: Int!
+  total: Int!
+}
+
+type CommentType {
+  authorId: String
+  content: String!
+  createdAt: DateTime!
+  dislikesCount: Int!
+  id: ID!
+  isDeleted: Boolean!
+  likesCount: Int!
+  parentId: String
+  postId: String!
+  reportCount: Int!
+  updatedAt: DateTime!
+  userName: String!
+}
+
+enum ComplaintPrivacy {
+  MISTO
+  PRIVADO
+  PUBLICO
+}
+
+enum ComplaintStatus {
+  EM_ANALISE
+  PENDENTE
+  REJEITADO
+  RESOLVIDO
+}
+
+type ComplaintType {
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  imageUrl: String
+  ip: String
+  latitude: Float
+  location: String
+  longitude: Float
+  privacy: ComplaintPrivacy!
+  status: ComplaintStatus!
+  type: PollutionType!
+  updatedAt: DateTime!
+  user: UserType
+}
+
+input ComplaintsFilterInput {
+  limit: Int = 10
+  page: Int = 1
+  search: String
+  status: String
+}
+
+type ComplianceVersionType {
+  content: String!
+  id: ID!
+  isActive: Boolean!
+  pdfName: String!
+  publishedAt: DateTime!
+  type: String!
+  version: String!
+}
+
+enum ConsentPurpose {
+  ANALYTICS
+  ESSENTIAL_TERMS
+  MARKETING_NOTIFICATIONS
+  PRIVACY_POLICY
+}
+
+type ConsentType {
+  id: ID!
+  purpose: ConsentPurpose!
+  status: Boolean!
+  updatedAt: DateTime!
+  version: String!
+}
+
+input ConsentUpdateInput {
+  purpose: ConsentPurpose!
+  status: Boolean!
+  version: String
+}
+
+type CourseTypeGql {
+  category: String!
+  createdAt: DateTime!
+  description: String
+  duration: String!
+  id: ID!
+  level: String!
+  modules: [ModuleTypeGql!]
+  thumbnailUrl: String
+  title: String!
+}
+
+input CoursesFilterInput {
+  category: String
+  level: String
+  limit: Int = 10
+  page: Int = 1
+}
+
+input CreateCommentInput {
+  authorId: String
+  content: String!
+  parentId: String
+  postId: String!
+  userName: String!
+}
+
+input CreateComplaintInput {
+  description: String!
+  imageUrl: String
+  ip: String
+  latitude: Float
+  location: String
+  longitude: Float
+  privacy: ComplaintPrivacy!
+  type: PollutionType!
+  userId: String!
+}
+
+input CreateCourseInput {
+  category: String!
+  description: String
+  duration: String!
+  level: String!
+  modules: [ModuleInput!]
+  thumbnailUrl: String
+  title: String!
+}
+
+input CreatePostInput {
+  authorId: String
+  category: String
+  content: String!
+  imageUrl: String
+  tags: [String!]
+  title: String!
+  userName: String!
+}
+
+input CreateUserInput {
+  address: AddressInput!
+  birthDate: String!
+  email: String!
+  ethnicity: UserEthnicity!
+  gender: UserGender!
+  identity: String!
+  password: String!
+  phones: [PhoneInput!]!
+  realName: String!
+  role: UserRole
+}
+
+type DashboardStatsType {
+  recentComplaints: [RecentComplaintType!]!
+  totalComplaints: Int!
+  totalUsers: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type ExportDataType {
+  complaints: [ComplaintType!]!
+  consents: [ConsentType!]!
+  exportedAt: DateTime!
+  user: UserType!
+}
+
+type ExportFileType {
+  base64: String!
+  filename: String!
+  mimeType: String!
+}
+
+type ExportRequestType {
+  message: String!
+  queued: Boolean!
+}
+
+input LessonInput {
+  contentBody: String
+  contentUrl: String
+  orderIndex: Int! = 0
+  quiz: QuizInput
+  title: String!
+  type: LessonType!
+}
+
+enum LessonType {
+  PDF
+  QUIZ
+  TEXT
+  VIDEO
+}
+
+type LessonTypeGql {
+  contentBody: String
+  contentUrl: String
+  id: ID!
+  orderIndex: Int!
+  quiz: QuizType
+  title: String!
+  type: LessonType!
+}
+
+input LogVisitInput {
+  action: String
+  path: String!
+  userAgent: String
+  userId: String
+  userName: String
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LoginResponseType {
+  token: String!
+  user: UserType!
+}
+
+type MapDataPointType {
+  createdAt: DateTime
+  description: String
+  id: ID!
+  latitude: Float!
+  longitude: Float!
+  status: String!
+  type: String!
+}
+
+type MessageResponseType {
+  message: String!
+}
+
+input ModuleInput {
+  lessons: [LessonInput!]
+  orderIndex: Int! = 0
+  title: String!
+}
+
+type ModuleTypeGql {
+  id: ID!
+  lessons: [LessonTypeGql!]
+  orderIndex: Int!
+  title: String!
+}
+
+type Mutation {
+  """Activate an existing legal document version"""
+  activateComplianceVersion(id: ID!): ComplianceVersionType!
+  addComment(input: CreateCommentInput!): CommentType!
+
+  """Anonymize/Delete user data (Right to be Forgotten)"""
+  anonymizeUserData(userId: ID!): MutationResultType!
+
+  """Create new complaint"""
+  createComplaint(input: CreateComplaintInput!): ComplaintType!
+
+  """Create new course"""
+  createCourse(input: CreateCourseInput!): CourseTypeGql!
+  createPost(input: CreatePostInput!): PostType!
+  deleteComment(commentId: ID!): MutationResultType!
+
+  """Delete a legal document version"""
+  deleteComplianceVersion(id: ID!): MutationResultType!
+  deletePost(id: ID!): MutationResultType!
+  dislikeComment(commentId: ID!, userId: String!): Int!
+
+  """Dislike a post. Returns new dislike count."""
+  dislikePost(postId: ID!, userId: String!): Int!
+
+  """Export all personal data for user portability (LGPD)"""
+  exportUserData(userId: ID!): ExportDataType!
+  likeComment(commentId: ID!, userId: String!): Int!
+
+  """Like a post. Returns new like count."""
+  likePost(postId: ID!, userId: String!): Int!
+  logVisit(input: LogVisitInput!): Boolean!
+
+  """Authenticate user"""
+  loginUser(input: LoginInput!): LoginResponseType!
+
+  """Publish a new legal document version"""
+  publishComplianceVersion(input: PublishComplianceVersionInput!): ComplianceVersionType!
+
+  """Register new user"""
+  registerUser(input: CreateUserInput!): UserType!
+
+  """Remove a complaint"""
+  removeComplaint(id: ID!): MutationResultType!
+
+  """Remove a course"""
+  removeCourse(id: ID!): MutationResultType!
+
+  """Remove user account"""
+  removeUser(id: ID!): MutationResultType!
+
+  """Report a comment. Returns total report count."""
+  reportComment(commentId: ID!, userId: String!): Int!
+  requestExcelExport: ExportRequestType!
+
+  """Request password reset instructions by email"""
+  requestPasswordReset(input: RequestPasswordResetInput!): MessageResponseType!
+
+  """Reset password using a password recovery token"""
+  resetPassword(input: ResetPasswordInput!): MessageResponseType!
+  sharePost(postId: ID!): MutationResultType!
+
+  """Update existing complaint"""
+  updateComplaint(id: ID!, input: UpdateComplaintInput!): ComplaintType
+
+  """Update existing course"""
+  updateCourse(id: ID!, input: UpdateCourseInput!): CourseTypeGql
+  updatePost(id: ID!, input: UpdatePostInput!): PostType
+
+  """Update user authentication details"""
+  updateUser(id: ID!, input: UpdateUserInput!): UserType!
+
+  """Update user privacy consents"""
+  updateUserConsents(updates: [ConsentUpdateInput!]!, userId: ID!): [ConsentType!]!
+
+  """Update profile metadata"""
+  updateUserProfile(id: ID!, input: UpdateUserInput!): UserType!
+}
+
+type MutationResultType {
+  message: String
+  success: Boolean!
+}
+
+type PaginatedComplaintsType {
+  items: [ComplaintType!]!
+  lastPage: Int!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+type PaginatedPostsType {
+  hasNextPage: Boolean!
+  items: [PostType!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+input PhoneInput {
+  ddd: String!
+  ddi: String!
+  number: String!
+}
+
+type PhoneType {
+  ddd: String
+  ddi: String
+  number: String
+}
+
+enum PollutionType {
+  AGUA
+  FLORESTA
+  INDUSTRIAL
+  OUTRO
+  URBANO
+}
+
+type PostType {
+  authorId: String
+  category: String
+  commentsCount: Int!
+  content: String!
+  createdAt: DateTime!
+  dislikesCount: Int!
+  id: ID!
+  imageUrl: String
+  isPinned: Boolean!
+  likesCount: Int!
+  shares: Int!
+  tags: [String!]!
+  title: String!
+  updatedAt: DateTime!
+  userName: String!
+  views: Int!
+}
+
+input PostsFilterInput {
+  category: String
+  limit: Int = 20
+  page: Int = 1
+  search: String
+}
+
+input PublishComplianceVersionInput {
+  content: String!
+  pdfName: String!
+  type: String!
+  version: String!
+}
+
+type Query {
+  """Get user achievements"""
+  achievements(userId: ID!): [AchievementType!]!
+  auditLogs(limit: Int = 50, page: Int = 1, type: String): AuditLogsType!
+
+  """Get top-level comments for a post"""
+  comments(limit: Int = 50, page: Int = 1, postId: ID!): [CommentType!]!
+
+  """Get complaint by ID"""
+  complaint(id: ID!): ComplaintType
+
+  """Get paginated list of complaints"""
+  complaints(filter: ComplaintsFilterInput): PaginatedComplaintsType!
+
+  """Get legal document version history by type"""
+  complianceVersions(type: String!): [ComplianceVersionType!]!
+
+  """Get course by ID"""
+  course(id: ID!): CourseTypeGql
+
+  """Get list of courses with pagination and filters"""
+  courses(filter: CoursesFilterInput): [CourseTypeGql!]!
+  exportFile(filename: String!): ExportFileType!
+
+  """Get lesson by ID"""
+  lesson(id: ID!): LessonTypeGql
+  mapData: [MapDataPointType!]!
+
+  """Get a single post by ID (increments view counter)"""
+  post(id: ID!): PostType
+
+  """Paginated list of forum posts with optional filters"""
+  posts(filter: PostsFilterInput): PaginatedPostsType!
+
+  """Get consolidated user profile and gamification"""
+  profile(id: ID!): UserProfileType
+
+  """Get threaded replies to a comment"""
+  replies(parentId: ID!): [CommentType!]!
+  sparkPredictions: [SparkPredictionType!]!
+  statsSummary: DashboardStatsType!
+
+  """Get user by ID"""
+  user(id: ID!): UserType
+
+  """Get user privacy consents"""
+  userConsents(userId: ID!): [ConsentType!]!
+
+  """List all users"""
+  users: [UserType!]!
+}
+
+input QuestionInput {
+  correctAnswerIndex: Int!
+  options: [String!]!
+  text: String!
+}
+
+type QuestionType {
+  correctAnswerIndex: Int!
+  id: ID!
+  options: [String!]!
+  text: String!
+}
+
+input QuizInput {
+  passingScore: Int! = 60
+  questions: [QuestionInput!]
+  title: String!
+}
+
+type QuizType {
+  id: ID!
+  passingScore: Int!
+  questions: [QuestionType!]
+  title: String!
+}
+
+type RecentComplaintType {
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  location: String
+  status: String!
+  type: String!
+}
+
+input RequestPasswordResetInput {
+  email: String!
+  portal: String
+}
+
+input ResetPasswordInput {
+  email: String!
+  password: String!
+  token: String!
+}
+
+type SparkPredictionType {
+  intensity: Float
+  latitude: Float!
+  longitude: Float!
+}
+
+type Subscription {
+  """Subscribe to new comments for a specific post"""
+  commentAdded(postId: ID!): CommentType!
+
+  """Subscribe to new posts in real-time"""
+  postAdded: PostType!
+}
+
+input UpdateComplaintInput {
+  description: String
+  imageUrl: String
+  ip: String
+  latitude: Float
+  location: String
+  longitude: Float
+  privacy: ComplaintPrivacy
+  status: ComplaintStatus
+  type: PollutionType
+}
+
+input UpdateCourseInput {
+  category: String
+  description: String
+  duration: String
+  level: String
+  thumbnailUrl: String
+  title: String
+}
+
+input UpdatePostInput {
+  category: String
+  content: String
+  imageUrl: String
+  tags: [String!]
+  title: String
+}
+
+input UpdateUserInput {
+  activeTitle: String
+  address: AddressInput
+  avatarFrame: String
+  avatarUrl: String
+  birthDate: String
+  email: String
+  ethnicity: UserEthnicity
+  gender: UserGender
+  identity: String
+  isPremium: Boolean
+  level: Int
+  password: String
+  phones: [PhoneInput!]
+  profilePhoto: String
+  realName: String
+  role: UserRole
+  xp: Int
+}
+
+enum UserEthnicity {
+  AMARELA
+  BRANCA
+  INDIGENA
+  PARDA
+  PRETA
+}
+
+type UserGamificationType {
+  activeTitle: String
+  avatarFrame: String
+  id: ID!
+  isPremium: Boolean!
+  level: Int!
+  xp: Int!
+}
+
+enum UserGender {
+  FEMININO
+  MASCULINO
+  NAO_INFORMAR
+  OUTRO
+}
+
+type UserProfileType {
+  address: AddressType
+  avatarUrl: String
+  bio: String
+  birthDate: String
+  ethnicity: UserEthnicity!
+  gender: UserGender!
+  id: ID!
+  identity: String
+  phones: [PhoneType!]
+  realName: String
+}
+
+enum UserRole {
+  ADMIN
+  CONTRACTOR
+  MODERATOR
+  SUPER_ADMIN
+  SUPER_CONTRACTOR
+  USER
+}
+
+type UserType {
+  billingCycle: String
+  createdAt: DateTime
+  email: String!
+  gamification: UserGamificationType
+  id: ID!
+  plan: String
+  profile: UserProfileType
+  role: UserRole!
+  subscriptionExpiresAt: DateTime
+  subscriptionStatus: String
+  updatedAt: DateTime
+}
