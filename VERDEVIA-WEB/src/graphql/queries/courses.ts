@@ -49,7 +49,6 @@ export const MODULE_FRAGMENT = gql`
 `;
 
 export const COURSE_FRAGMENT = gql`
-  ${MODULE_FRAGMENT}
   fragment CourseFields on CourseTypeGql {
     id
     title
@@ -73,6 +72,7 @@ export const GET_COURSES = gql`
 
 export const GET_COURSE = gql`
   ${COURSE_FRAGMENT}
+  ${MODULE_FRAGMENT}
   query GetCourse($id: ID!) {
     course(id: $id) {
       ...CourseFields

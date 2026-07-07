@@ -526,6 +526,7 @@ async function bootstrap() {
 
   console.log('✨ Mega Seeding Finalizado!');
   await app.close();
+  process.exit(0);
 }
 
 bootstrap().catch((err) => {

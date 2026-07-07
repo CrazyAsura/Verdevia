@@ -62,29 +62,72 @@ Para facilitar os testes iniciais, o sistema conta com usuários pré-semeados:
 
 | Nível de Acesso | E-mail | Senha |
 | :--- | :--- | :--- |
-| **Super Admin** | `superadmin@verdevia.app` | `VerdeviaAdmin2026Seguro` |
-| **Admin** | `admin@verdevia.app` | `VerdeviaAdmin2026Seguro` |
-| **Super Contratante** | `supercontractor@verdevia.app` | `VerdeviaContratante2026` |
-| **Contratante** | `contractor@verdevia.app` | `VerdeviaContratante2026` |
+| **Super Admin** | `superadmin@verdevia.app` | `VERDEVIAAdmin2026Seguro` |
+| **Admin** | `admin@verdevia.app` | `VERDEVIAAdmin2026Seguro` |
+| **Super Contratante** | `supercontractor@verdevia.app` | `VERDEVIAContratante2026` |
+| **Contratante** | `contractor@verdevia.app` | `VERDEVIAContratante2026` |
 
 ---
 
 ## 🗺️ Mapeamento de Rotas (Web/Dashboard)
 
-A plataforma web possui dashboards especializados dependendo do nível de acesso do usuário.
+A plataforma web usa o App Router do Next.js e possui páginas públicas, fluxos de autenticação e dashboards especializados por perfil de acesso.
 
-### 🏢 Gestão de Empresas e Contratadas
-- **`/contractors`**: Dashboard principal para empresas prestadoras de serviço.
-    - `/contractors/complaints`: Gestão e resolução de queixas ambientais atribuídas.
-- **`/super-contractors`**: Dashboard para gestão de holding/empresas master.
-    - `/super-contractors/subordinates`: Gerenciamento de empresas subordinadas e desempenho.
+### 🌱 Páginas Públicas
+- **`/`**: Página inicial institucional.
+- **`/sobre`**: Apresentação da plataforma.
+- **`/servicos`**: Serviços oferecidos.
+- **`/planos`**: Planos e assinaturas.
+- **`/prestadores`**: Área pública para prestadores.
+- **`/denuncias`**: Listagem pública de denúncias ambientais.
+    - `/denuncias/[id]`: Detalhe público de uma denúncia.
+- **`/baixar`** e **`/download`**: Páginas de download do aplicativo.
+- **`/perguntas-frequentes`**: FAQ.
+- **`/suporte`** e **`/support`**: Canais de suporte.
+- **`/privacidade`** e **`/privacy`**: Política de privacidade.
+
+### 🔐 Autenticação
+- **`/autenticacao/administrador/login`**: Login de administradores.
+- **`/autenticacao/prestadores/login`**: Login de prestadores.
+- **`/autenticacao/super-administrador/login`**: Login de super administradores.
+- **`/autenticacao/super-prestadores/login`**: Login de super prestadores.
+- **`/autenticacao/*/forgot-password`**: Recuperação de senha por perfil.
+- **`/autenticacao/reset-password`**: Redefinição de senha.
+
+### 🏢 Prestadores e Super Prestadores
+- **`/prestadores/denuncias`**: Gestão de denúncias atribuídas aos prestadores.
+    - `/prestadores/denuncias/detalhes`: Detalhe operacional da denúncia.
+- **`/super-prestadores`**: Dashboard de gestão de prestadores master.
+    - `/super-prestadores/subordinados`: Gerenciamento de prestadores subordinados.
+    - `/super-prestadores/subordinados/create`: Cadastro de subordinados.
+    - `/super-prestadores/subordinados/detalhes`: Detalhes e desempenho de subordinados.
+    - `/super-prestadores/alertas/detalhes`: Detalhe de alertas.
+    - `/super-prestadores/logs`: Auditoria e eventos do perfil.
 
 ### 🛡️ Administração da Plataforma
-- **`/admin`**: Painel administrativo operacional.
-    - `/admin/courses`: Gestão de conteúdo educacional e trilhas do Verdevia Academy.
-- **`/superadmin`**: Painel de controle total da infraestrutura.
-    - `/superadmin/admins`: Gestão de privilégios e criação de novos administradores.
-    - `/superadmin/logs`: Acesso aos **Audit Logs** detalhados (rastreabilidade total via Meta-standard logs).
+- **`/administrador`**: Painel administrativo operacional.
+    - `/administrador/denuncias`: Gestão de denúncias.
+    - `/administrador/forum`: Moderação do fórum.
+    - `/administrador/cursos`: Gestão de cursos e trilhas.
+    - `/administrador/cursos/create`: Criação de cursos.
+    - `/administrador/cursos/edit`: Edição de cursos.
+    - `/administrador/cursos/view`: Visualização de cursos.
+- **`/super-administrador`**: Painel principal de super administração.
+    - `/super-administrador/administradores`: Gestão de administradores.
+    - `/super-administrador/administradores/create`: Criação de administradores.
+    - `/super-administrador/administradores/edit`: Edição de administradores.
+    - `/super-administrador/conformidade`: Conformidade, LGPD e versões legais.
+    - `/super-administrador/logs`: Logs de auditoria.
+- **`/superadmin`**: Rotas legadas/alternativas de super administração.
+    - `/superadmin/admins`: Gestão de administradores.
+    - `/superadmin/admins/create`: Criação de administradores.
+    - `/superadmin/admins/edit`: Edição de administradores.
+    - `/superadmin/compliance`: Conformidade e histórico legal.
+    - `/superadmin/logs`: Logs de auditoria.
+
+### 📊 Painéis
+- **`/painel`**: Dashboard geral.
+- **`/painel/v2`**: Nova versão do dashboard.
 
 ---
 

@@ -46,17 +46,18 @@ client.connect()
   .then(res => {
     const count = parseInt(res.rows[0].count, 10);
     process.stdout.write(count === 0 ? 'yes' : 'no');
-    return client.end();
+    client.end().catch(() => {}).then(() => process.exit(0));
   })
   .catch(() => {
     // Table might not exist yet (first migration run) — seed after app starts
     process.stdout.write('yes');
+    client.end().catch(() => {}).then(() => process.exit(0));
   });
 " 2>/dev/null || echo "yes")
 
 if [ "$NEEDS_SEED" = "yes" ]; then
   echo "[entrypoint] 📦 Database is empty — running seed..."
-  node dist/database/seed.js && echo "[entrypoint] ✅ Seed completed." || echo "[entrypoint] ⚠️  Seed failed (app will still start)."
+  KAFKA_CONSUMER_ENABLED=false node dist/database/seed.js && echo "[entrypoint] ✅ Seed completed." || echo "[entrypoint] ⚠️  Seed failed (app will still start)."
 else
   echo "[entrypoint] ✅ Database already has data — skipping seed."
 fi

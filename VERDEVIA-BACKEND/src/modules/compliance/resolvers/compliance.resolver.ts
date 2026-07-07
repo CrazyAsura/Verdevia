@@ -29,7 +29,6 @@ export class ComplianceResolver {
   @Query(() => [ComplianceVersionType], {
     description: 'Get legal document version history by type',
   })
-  @UseGuards(JwtAuthGuard)
   async complianceVersions(
     @Args('type') type: string,
   ): Promise<ComplianceVersionType[]> {

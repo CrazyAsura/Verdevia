@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getEffectivePlan, hasAnyPlanFeature, PlanFeature } from '@/lib/plan-access';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -180,7 +181,7 @@ export default function DashboardLayout({ children, title, role }: DashboardLayo
   roleConfigs['super_contractor'] = roleConfigs['super-contractor'];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex overflow-hidden font-sans">
+    <div className="admin-shell h-dvh min-h-screen bg-background text-foreground flex overflow-hidden font-sans">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -196,7 +197,7 @@ export default function DashboardLayout({ children, title, role }: DashboardLayo
           width: isSidebarOpen ? 280 : 80,
           x: (typeof window !== 'undefined' && window.innerWidth < 1024 && !isSidebarOpen) ? -80 : 0
         }}
-        className={`bg-[#080808] border-r border-white/5 flex flex-col z-60 fixed lg:relative h-full transition-all duration-300`}
+        className="bg-card/95 border-r border-border flex flex-col z-60 fixed lg:relative h-dvh max-w-[86vw] transition-all duration-300"
       >
         <div className="p-6 flex items-center justify-between">
           {isSidebarOpen && (
@@ -239,10 +240,10 @@ export default function DashboardLayout({ children, title, role }: DashboardLayo
       </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      <main className="min-w-0 flex-1 flex flex-col overflow-hidden relative">
         {/* Header */}
-        <header className="h-20 bg-[#050505]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-40">
-           <div className="flex items-center gap-4">
+        <header className="min-h-20 bg-background/80 backdrop-blur-md border-b border-border flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:flex-nowrap md:px-8 z-40">
+           <div className="min-w-0 flex flex-1 items-center gap-3 sm:gap-4">
               {!isSidebarOpen && (
                 <button 
                   onClick={() => setIsSidebarOpen(true)}
@@ -252,20 +253,21 @@ export default function DashboardLayout({ children, title, role }: DashboardLayo
                 </button>
               )}
               <CinematicTooltip content={title}>
-                <h1 className="text-sm md:text-xl font-black uppercase tracking-tight truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">{title}</h1>
+                <h1 className="text-sm md:text-xl font-black uppercase tracking-tight truncate max-w-[42vw] sm:max-w-[240px] xl:max-w-none">{title}</h1>
               </CinematicTooltip>
-              <div className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
+              <div className="hidden sm:block px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
                  <span className="text-[10px] font-black uppercase text-primary tracking-widest">{role}</span>
               </div>
-              <div className="hidden sm:block px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+              <div className="hidden lg:block px-3 py-1 bg-white/5 border border-white/10 rounded-full">
                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                    Plano {getEffectivePlan(user).replace('_', ' ')}
                  </span>
               </div>
            </div>
 
-           <div className="flex items-center gap-6">
-              <div className="relative hidden md:block">
+           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-6">
+              <ThemeToggle className="hidden md:inline-flex size-10" />
+              <div className="relative hidden lg:block">
                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                  <input 
                    type="text" 
@@ -302,8 +304,8 @@ export default function DashboardLayout({ children, title, role }: DashboardLayo
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div className="flex items-center gap-3 border-l border-white/10 pl-6">
-                 <div className="text-right">
+              <div className="flex items-center gap-3 border-l border-white/10 pl-3 sm:pl-6">
+                 <div className="hidden text-right sm:block">
                     <p className="text-xs font-black uppercase tracking-tight">{user?.name || 'Administrador'}</p>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">ID: {user?.id?.slice(0, 5) || '---'}</p>
                  </div>
@@ -315,7 +317,7 @@ export default function DashboardLayout({ children, title, role }: DashboardLayo
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
            {children}
         </div>
       </main>

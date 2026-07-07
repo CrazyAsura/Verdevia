@@ -1,4 +1,5 @@
 import { ObjectType, Field, ID, Int, InputType } from '@nestjs/graphql';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 
 // ─── Object Types (Response Shape) ───────────────────────────────────────────
 
@@ -165,15 +166,23 @@ export class UpdatePostInput {
 
 @InputType()
 export class PostsFilterInput {
+  @IsOptional()
+  @IsString()
   @Field({ nullable: true })
   category?: string;
 
+  @IsOptional()
+  @IsString()
   @Field({ nullable: true })
   search?: string;
 
+  @IsOptional()
+  @IsInt()
   @Field(() => Int, { nullable: true, defaultValue: 1 })
   page?: number;
 
+  @IsOptional()
+  @IsInt()
   @Field(() => Int, { nullable: true, defaultValue: 20 })
   limit?: number;
 }

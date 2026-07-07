@@ -166,6 +166,129 @@
       radial-gradient(circle at 85% 75%, oklch(0.68 0.16 205 / 0.1) 0%, transparent 50%);
   }
 
+  .admin-shell {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  .admin-shell [class*="bg-[#050505]"],
+  .admin-shell [class*="bg-[#080808]"],
+  .admin-shell [class*="bg-[#0c0c0c]"] {
+    background-color: color-mix(in oklch, var(--card) 94%, transparent) !important;
+  }
+
+  .admin-shell [class*="bg-white/1"],
+  .admin-shell [class*="bg-white/2"],
+  .admin-shell [class*="bg-white/3"],
+  .admin-shell [class*="bg-white/5"],
+  .admin-shell [class*="bg-white/10"] {
+    background-color: color-mix(in oklch, var(--muted) 56%, transparent) !important;
+  }
+
+  .admin-shell [class*="border-white/"] {
+    border-color: color-mix(in oklch, var(--border) 86%, transparent) !important;
+  }
+
+  .admin-shell .text-white,
+  .admin-shell [class*="hover:text-white"]:hover {
+    color: var(--foreground) !important;
+  }
+
+  .admin-shell .text-slate-200,
+  .admin-shell .text-slate-300,
+  .admin-shell .text-slate-400 {
+    color: color-mix(in oklch, var(--foreground) 74%, var(--muted-foreground)) !important;
+  }
+
+  .admin-shell .text-slate-500,
+  .admin-shell .text-slate-600 {
+    color: var(--muted-foreground) !important;
+  }
+
+  .admin-shell input,
+  .admin-shell textarea,
+  .admin-shell select {
+    color: var(--foreground);
+  }
+
+  .admin-shell input::placeholder,
+  .admin-shell textarea::placeholder {
+    color: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
+  }
+
+  .admin-shell main,
+  .admin-shell section,
+  .admin-shell article,
+  .admin-shell form,
+  .admin-shell [class*="grid"],
+  .admin-shell [class*="flex"] {
+    min-width: 0;
+  }
+
+  .admin-shell .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-shell table {
+    border-collapse: collapse;
+  }
+
+  .admin-shell th,
+  .admin-shell td {
+    vertical-align: middle;
+  }
+
+  @media (max-width: 767px) {
+    .admin-shell [class*="rounded-3xl"],
+    .admin-shell [class*="rounded-[2.5rem]"] {
+      border-radius: 1rem !important;
+    }
+
+    .admin-shell .overflow-x-auto table {
+      min-width: 42rem;
+    }
+
+    .admin-shell th,
+    .admin-shell td {
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .admin-shell [class*="tracking-[0.2em]"],
+    .admin-shell [class*="tracking-widest"] {
+      letter-spacing: 0.08em;
+    }
+  }
+
+  .dark .admin-shell [class*="bg-[#050505]"] {
+    background-color: #050505 !important;
+  }
+
+  .dark .admin-shell [class*="bg-[#080808]"] {
+    background-color: #080808 !important;
+  }
+
+  .dark .admin-shell [class*="bg-[#0c0c0c]"] {
+    background-color: #0c0c0c !important;
+  }
+
+  .dark .admin-shell [class*="bg-white/1"],
+  .dark .admin-shell [class*="bg-white/2"],
+  .dark .admin-shell [class*="bg-white/3"],
+  .dark .admin-shell [class*="bg-white/5"],
+  .dark .admin-shell [class*="bg-white/10"] {
+    background-color: rgb(255 255 255 / 0.05) !important;
+  }
+
+  .dark .admin-shell [class*="border-white/"] {
+    border-color: rgb(255 255 255 / 0.1) !important;
+  }
+
+  .dark .admin-shell .text-white,
+  .dark .admin-shell [class*="hover:text-white"]:hover {
+    color: #fff !important;
+  }
+
   /* Low Performance & Accessibility Tweaks */
   body.low-perf .grain::after,
   body.reduce-motion .grain::after {

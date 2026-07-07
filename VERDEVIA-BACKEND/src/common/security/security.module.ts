@@ -29,8 +29,10 @@ import { KeyExchangeController } from '../crypto/controllers/key-exchange.contro
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const jwtSecret =
+          config.get<string>('JWT_SECRET') || 'fallback-dev-secret';
         const jwtConfig = {
-          secret: config.get<string>('JWT_SECRET') ?? '',
+          secret: jwtSecret,
           signOptions: {
             expiresIn: config.get<string>('JWT_EXPIRATION') ?? '7d',
             audience: config.get<string>('JWT_AUDIENCE') ?? 'VERDEVIA-app',

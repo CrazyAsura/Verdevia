@@ -26,10 +26,11 @@ export interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: ConfigService) {
+    const jwtSecret = config.get<string>('JWT_SECRET') || 'fallback-dev-secret';
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get<string>('JWT_SECRET') ?? 'fallback-dev-secret',
+      secretOrKey: jwtSecret,
       // Additional hardening: validate audience and issuer
       audience: config.get<string>('JWT_AUDIENCE') ?? 'VERDEVIA-app',
       issuer: config.get<string>('JWT_ISSUER') ?? 'VERDEVIA-backend',

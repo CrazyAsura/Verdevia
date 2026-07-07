@@ -7,6 +7,7 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import { LessonType } from '../../entities/lesson.entity';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 
 // ─── Enum Registration ───────────────────────────────────────────────────────
 
@@ -219,15 +220,23 @@ export class UpdateCourseInput {
 
 @InputType()
 export class CoursesFilterInput {
+  @IsOptional()
+  @IsInt()
   @Field(() => Int, { nullable: true, defaultValue: 1 })
   page?: number;
 
+  @IsOptional()
+  @IsInt()
   @Field(() => Int, { nullable: true, defaultValue: 10 })
   limit?: number;
 
+  @IsOptional()
+  @IsString()
   @Field({ nullable: true })
   category?: string;
 
+  @IsOptional()
+  @IsString()
   @Field({ nullable: true })
   level?: string;
 }

@@ -4,6 +4,14 @@ import { ApolloClient, InMemoryCache, HttpLink, from, ApolloLink } from '@apollo
 import { ErrorLink } from '@apollo/client/link/error';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 
+const PUBLIC_OPERATIONS = new Set([
+  'LoginUser',
+  'RegisterUser',
+  'RequestPasswordReset',
+  'ResetPassword',
+  'GetComplianceVersions',
+]);
+
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ??
   (() => {
@@ -26,11 +34,23 @@ const GRAPHQL_URL =
  * Uses Apollo v4's ErrorLink class directly (onError is deprecated).
  * Errors arrive as { error } — use CombinedGraphQLErrors.is() to discriminate.
  */
-const errorLink = new ErrorLink(({ error }) => {
+const errorLink = new ErrorLink(({ error, operation }) => {
   if (CombinedGraphQLErrors.is(error)) {
     error.errors.forEach(({ message, path }) => {
       console.error(`[GraphQL Error] ${message} at ${String(path)}`);
       if (typeof window !== 'undefined') {
+        const isAuthError =
+          message === 'Token inválido ou expirado' ||
+          message === 'Token invalido ou expirado';
+        const isPublicOperation = PUBLIC_OPERATIONS.has(operation.operationName);
+
+        if (isAuthError && !isPublicOperation) {
+          localStorage.removeItem('VERDEVIA_token');
+          localStorage.removeItem('verdevia_user');
+          window.location.href = '/autenticacao/administrador/login';
+          return;
+        }
+
         window.dispatchEvent(
           new CustomEvent('VERDEVIA-toast', {
             detail: {
@@ -74,7 +94,9 @@ const errorLink = new ErrorLink(({ error }) => {
  */
 const authLink = new ApolloLink((operation, forward) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('VERDEVIA_token');
+    const token = PUBLIC_OPERATIONS.has(operation.operationName)
+      ? null
+      : localStorage.getItem('VERDEVIA_token');
     if (token) {
       operation.setContext(({ headers = {} }: { headers: Record<string, string> }) => ({
         headers: { ...headers, Authorization: `Bearer ${token}` },

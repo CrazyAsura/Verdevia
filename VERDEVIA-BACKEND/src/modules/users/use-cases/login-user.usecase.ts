@@ -8,6 +8,31 @@ import { ROLE_DEFAULT_PLAN } from '../../subscriptions/plans';
 /** Platform-privileged roles that always have active subscription status. */
 const PRIVILEGED_ROLES = new Set<string>([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
+const LEGACY_SEED_PASSWORD_ALIASES: Record<string, string> = {
+  VERDEVIAAdmin2026Seguro: 'EcoaAdmin2026Seguro',
+  VerdeviaAdmin2026Seguro: 'EcoaAdmin2026Seguro',
+  VERDEVIAContratante2026: 'EcoaContratante2026',
+  VerdeviaContratante2026: 'EcoaContratante2026',
+};
+
+function getEmailCandidates(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const legacyEmail = normalizedEmail.endsWith('@verdevia.app')
+    ? normalizedEmail.replace('@verdevia.app', '@ecoa.app')
+    : null;
+
+  return legacyEmail && legacyEmail !== normalizedEmail
+    ? [normalizedEmail, legacyEmail]
+    : [normalizedEmail];
+}
+
+function getPasswordCandidates(password: string) {
+  const legacyPassword = LEGACY_SEED_PASSWORD_ALIASES[password];
+  return legacyPassword && legacyPassword !== password
+    ? [password, legacyPassword]
+    : [password];
+}
+
 @Injectable()
 export class LoginUserUseCase {
   constructor(
@@ -17,15 +42,19 @@ export class LoginUserUseCase {
   ) {}
 
   async execute(credentials: { email: string; password: string }) {
-    const user = await this.repository.findByEmail(
-      credentials.email.trim().toLowerCase(),
+    const emailCandidates = getEmailCandidates(credentials.email);
+    const passwordCandidates = getPasswordCandidates(credentials.password);
+    const users = await Promise.all(
+      emailCandidates.map((email) => this.repository.findByEmail(email)),
     );
+    const user = users.find(Boolean);
 
     if (user) {
-      const isPasswordValid = await argon2.verify(
-        user.password,
-        credentials.password,
+      const passwordResults = await Promise.all(
+        passwordCandidates.map((password) => argon2.verify(user.password, password)),
       );
+      const isPasswordValid = passwordResults.some(Boolean);
+
       if (isPasswordValid) {
         const { password, ...safeUser } = user as any;
         const isPrivileged = PRIVILEGED_ROLES.has(user.role);

@@ -13,6 +13,7 @@ import {
   ComplaintPrivacy,
 } from '../../enums/complaint.enums';
 import { UserType } from '../../../users/dto/graphql/users-graphql.dto';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 
 // ─── Enum Registration ───────────────────────────────────────────────────────
 
@@ -146,15 +147,23 @@ export class UpdateComplaintInput {
 
 @InputType()
 export class ComplaintsFilterInput {
+  @IsOptional()
+  @IsInt()
   @Field(() => Int, { nullable: true, defaultValue: 1 })
   page?: number;
 
+  @IsOptional()
+  @IsInt()
   @Field(() => Int, { nullable: true, defaultValue: 10 })
   limit?: number;
 
+  @IsOptional()
+  @IsString()
   @Field({ nullable: true })
   search?: string;
 
+  @IsOptional()
+  @IsString()
   @Field({ nullable: true })
   status?: string;
 }

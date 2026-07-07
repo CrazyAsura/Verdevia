@@ -34,7 +34,7 @@ import { SmtpMailService } from '../../common/mail/smtp-mail.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET') ?? 'fallback-dev-secret',
+        secret: config.get<string>('JWT_SECRET') || 'fallback-dev-secret',
         signOptions: {
           expiresIn: (config.get<string>('JWT_EXPIRATION') ?? '7d') as any,
           audience: config.get<string>('JWT_AUDIENCE') ?? 'VERDEVIA-app',
