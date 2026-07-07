@@ -20,18 +20,23 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   async rewrites() {
+    // In Docker, Next.js SSR rewrites run inside the container — 127.0.0.1:3333
+    // resolves to the frontend container itself, NOT the backend service.
+    // BACKEND_INTERNAL_URL should be set to http://backend:3333 in docker-compose.
+    // Falls back to 127.0.0.1:3333 for local development outside Docker.
+    const backendUrl = process.env.BACKEND_INTERNAL_URL ?? 'http://127.0.0.1:3333';
     return [
       {
         source: '/graphql',
-        destination: 'http://127.0.0.1:3333/graphql',
+        destination: `${backendUrl}/graphql`,
       },
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:3333/:path*',
+        destination: `${backendUrl}/:path*`,
       },
       {
         source: '/socket.io/:path*',
-        destination: 'http://127.0.0.1:3333/socket.io/:path*',
+        destination: `${backendUrl}/socket.io/:path*`,
       },
     ];
   },

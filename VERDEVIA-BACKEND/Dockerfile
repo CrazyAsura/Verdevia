@@ -39,6 +39,10 @@ COPY --chown=node:node --from=builder /app/package*.json ./
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/dist ./dist
 
+# Copy and configure the entrypoint (runs as root before USER drop)
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Create directories for SQLite, uploads, and public exports if needed
 RUN mkdir -p /app/database /app/uploads /app/public/exports && chown -R node:node /app/database /app/uploads /app/public/exports
 
@@ -46,5 +50,6 @@ USER node
 
 EXPOSE 3333
 
-# Start the application
+# Entrypoint handles DB check + seed, then hands off to CMD
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["yarn", "start:prod"]
