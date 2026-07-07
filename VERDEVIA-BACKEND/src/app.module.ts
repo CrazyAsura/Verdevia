@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import { DatabaseConfigService } from './database/database-config.service';
 import { MongoConfigService } from './database/mongo-config.service';
@@ -82,8 +83,10 @@ const mongoEnabled = process.env.MONGODB_ENABLED !== 'false';
     // ── GraphQL (Apollo Server) ───────────────────────────────────────────────
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      // Code-first: schema auto-generated from decorators
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      // Code-first: schema auto-generated from decorators (in-memory if src directory doesn't exist to avoid EACCES)
+      autoSchemaFile: existsSync(join(process.cwd(), 'src'))
+        ? join(process.cwd(), 'src/schema.gql')
+        : true,
       sortSchema: true,
       // Subscriptions via graphql-ws (modern, replaces subscriptions-transport-ws)
       subscriptions: {

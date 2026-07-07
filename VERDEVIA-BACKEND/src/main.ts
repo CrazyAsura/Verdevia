@@ -80,6 +80,8 @@ async function bootstrap() {
     'http://localhost:19006', // Expo Web (legacy)
     'https://verdevia.vercel.app',
     'https://verdevia-green.vercel.app',
+    'https://localhost',
+    'https://127.0.0.1',
     ...(process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) ?? []),
   ].filter(Boolean);
 
@@ -87,14 +89,21 @@ async function bootstrap() {
     origin: (origin, callback) => {
       // Allow requests with no origin (native mobile apps, Postman, curl)
       if (!origin) return callback(null, true);
-      // Allow local network and localhost in development
+      // Allow local network and localhost in development (both HTTP and HTTPS)
       if (!isProd) {
         if (
           origin.startsWith('http://localhost:') ||
+          origin.startsWith('https://localhost:') ||
+          origin.startsWith('https://localhost') ||
           origin.startsWith('http://127.0.0.1:') ||
+          origin.startsWith('https://127.0.0.1:') ||
+          origin.startsWith('https://127.0.0.1') ||
           origin.startsWith('http://192.168.') ||
+          origin.startsWith('https://192.168.') ||
           origin.startsWith('http://10.') ||
-          origin.startsWith('http://172.')
+          origin.startsWith('https://10.') ||
+          origin.startsWith('http://172.') ||
+          origin.startsWith('https://172.')
         ) {
           return callback(null, true);
         }

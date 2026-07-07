@@ -39,8 +39,8 @@ COPY --chown=node:node --from=builder /app/package*.json ./
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/dist ./dist
 
-# Create directories for SQLite and uploads if needed
-RUN mkdir -p /app/database /app/uploads && chown -R node:node /app/database /app/uploads
+# Create directories for SQLite, uploads, and public exports if needed
+RUN mkdir -p /app/database /app/uploads /app/public/exports && chown -R node:node /app/database /app/uploads /app/public/exports
 
 USER node
 
