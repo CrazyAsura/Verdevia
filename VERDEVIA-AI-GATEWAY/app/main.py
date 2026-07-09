@@ -1,34 +1,29 @@
 import logging
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 
-from app.config import settings
-from app.graph import EnvironmentalAnalysisGraph
-from app.schemas import AnalyzeImageRequest, AnalyzeImageResponse
+from app.core.config import settings
+from app.modules.image_analysis.application.analysis_graph import (
+    EnvironmentalAnalysisGraph,
+)
+from app.modules.rag.application.rag_chat_graph import RAGChatGraph
+from app.modules.rag.infrastructure.rag_engine import RAGEngine
+from app.presentation.http.routes import build_ai_router
 
 logging.basicConfig(level=settings.ai_gateway_log_level.upper())
-logger = logging.getLogger(__name__)
-
-app = FastAPI(title="VERDEVIA AI Gateway", version="1.0.0")
-analysis_graph = EnvironmentalAnalysisGraph()
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {
-        "status": "ok",
-        "provider": "ollama",
-        "model": settings.ollama_model,
-    }
+def create_app() -> FastAPI:
+    app = FastAPI(title="VERDEVIA AI Gateway", version="1.0.0")
+    rag_engine = RAGEngine()
+    app.include_router(
+        build_ai_router(
+            analysis_graph=EnvironmentalAnalysisGraph(),
+            rag_engine=rag_engine,
+            rag_graph=RAGChatGraph(rag_engine),
+        )
+    )
+    return app
 
 
-@app.post("/ai/analyze-image", response_model=AnalyzeImageResponse)
-def analyze_image(payload: AnalyzeImageRequest) -> AnalyzeImageResponse:
-    try:
-        return analysis_graph.run(payload)
-    except Exception as exc:
-        logger.exception("Image analysis failed")
-        raise HTTPException(
-            status_code=502,
-            detail=f"Falha ao analisar imagem com Ollama: {exc}",
-        ) from exc
+app = create_app()

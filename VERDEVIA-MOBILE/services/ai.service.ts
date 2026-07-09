@@ -1,6 +1,26 @@
 import api from './api';
 
 export type RiskLevel = 'low' | 'medium' | 'high';
+export type ImageAuthenticityStatus =
+  | 'authentic'
+  | 'suspected_ai_or_edited'
+  | 'inconclusive';
+export type ImageAuthenticityClassification =
+  | 'Muito provavelmente real'
+  | 'Provavelmente real'
+  | 'Inconclusiva'
+  | 'Provavelmente gerada ou manipulada por IA'
+  | 'Muito provavelmente gerada ou manipulada por IA';
+export type EnvironmentalCategory =
+  | 'descarte_irregular'
+  | 'lixo_plastico'
+  | 'esgoto'
+  | 'poluicao_agua'
+  | 'poluicao_ar'
+  | 'queimadas'
+  | 'entulho'
+  | 'area_degradada'
+  | 'outro';
 
 export interface AnalysisLocation {
   latitude: number;
@@ -8,17 +28,19 @@ export interface AnalysisLocation {
 }
 
 export interface EnvironmentalImageAnalysis {
-  category: string;
+  category: EnvironmentalCategory;
   confidence: number;
   isEnvironmentalComplaint: boolean;
   detectedProblems: string[];
   description: string;
   riskLevel: RiskLevel;
   recommendedAction: string;
-  authenticityStatus: 'authentic' | 'suspected_ai_or_edited' | 'inconclusive';
+  authenticityStatus: ImageAuthenticityStatus;
   authenticityConfidence: number;
+  authenticityClassification: ImageAuthenticityClassification;
   suspectedManipulation: boolean;
   authenticityMessage: string;
+  authenticityReport: string;
   model: string;
   provider: 'ollama';
 }
@@ -82,7 +104,7 @@ function withLegacyImageAnalysisFields(
         score: analysis.confidence,
       },
       {
-        name: `Autenticidade: ${analysis.authenticityStatus}`,
+        name: `Autenticidade: ${analysis.authenticityClassification}`,
         score: analysis.authenticityConfidence,
       },
       {

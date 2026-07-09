@@ -42,7 +42,7 @@ export function CookieConsentWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[999] pointer-events-none">
+    <div className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-4 z-[999] pointer-events-none sm:bottom-6 sm:right-6">
       
       {/* Botão Flutuante Gatilho (Sempre ativo no canto inferior direito para o usuário alterar a qualquer momento) */}
       <div className="pointer-events-auto flex justify-end">
@@ -64,7 +64,7 @@ export function CookieConsentWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="pointer-events-auto absolute bottom-16 right-0 w-80 sm:w-96 glass border border-white/10 bg-[#0c0c0cd0] backdrop-blur-2xl rounded-3xl p-6 shadow-2xl flex flex-col space-y-4"
+            className="pointer-events-auto absolute bottom-16 right-0 max-h-[calc(100vh-9.5rem-env(safe-area-inset-bottom))] w-[calc(100vw-2rem)] max-w-80 overflow-y-auto glass border border-white/10 bg-[#0c0c0cd0] backdrop-blur-2xl rounded-3xl p-5 shadow-2xl flex flex-col space-y-4 sm:max-h-none sm:w-96 sm:max-w-none sm:p-6"
           >
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export function CookieConsentWidget() {
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
-            className="pointer-events-auto absolute bottom-16 right-0 w-80 glass border border-white/10 bg-black/80 backdrop-blur-md rounded-2xl p-4 shadow-xl flex gap-3 items-start"
+            className="pointer-events-auto absolute bottom-16 right-0 w-[calc(100vw-2rem)] max-w-80 glass border border-white/10 bg-black/80 backdrop-blur-md rounded-2xl p-4 shadow-xl flex gap-3 items-start"
           >
             <Cookie className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div className="flex-1 space-y-2">

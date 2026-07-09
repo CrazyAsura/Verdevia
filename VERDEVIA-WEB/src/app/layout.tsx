@@ -61,6 +61,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Dock } from "@/components/navigation/Dock";
 import { CookieConsentWidget } from "@/components/navigation/CookieConsentWidget";
+import { ChatbotWidget } from "@/components/navigation/ChatbotWidget";
 import { PerformanceDetector } from "@/components/PerformanceDetector";
 
 const schemaData = {
@@ -124,6 +125,7 @@ export default function RootLayout({
             </PageTransition>
           </SmoothScroll>
           <Dock />
+          <ChatbotWidget />
           <CookieConsentWidget />
         </Providers>
       </body>

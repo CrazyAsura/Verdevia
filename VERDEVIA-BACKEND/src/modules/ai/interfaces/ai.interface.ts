@@ -8,6 +8,12 @@ export type ImageAuthenticityStatus =
   | 'authentic'
   | 'suspected_ai_or_edited'
   | 'inconclusive';
+export type ImageAuthenticityClassification =
+  | 'Muito provavelmente real'
+  | 'Provavelmente real'
+  | 'Inconclusiva'
+  | 'Provavelmente gerada ou manipulada por IA'
+  | 'Muito provavelmente gerada ou manipulada por IA';
 
 export interface AiAnalysisLocation {
   latitude: number;
@@ -33,8 +39,10 @@ export interface EnvironmentalImageAnalysis {
   recommendedAction: string;
   authenticityStatus: ImageAuthenticityStatus;
   authenticityConfidence: number;
+  authenticityClassification: ImageAuthenticityClassification;
   suspectedManipulation: boolean;
   authenticityMessage: string;
+  authenticityReport: string;
   model: string;
   provider: 'ollama';
 }

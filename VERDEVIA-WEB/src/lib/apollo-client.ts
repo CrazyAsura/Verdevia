@@ -12,6 +12,10 @@ const PUBLIC_OPERATIONS = new Set([
   'GetComplianceVersions',
 ]);
 
+function isPublicOperation(operationName?: string): boolean {
+  return operationName ? PUBLIC_OPERATIONS.has(operationName) : false;
+}
+
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ??
   (() => {
@@ -42,9 +46,9 @@ const errorLink = new ErrorLink(({ error, operation }) => {
         const isAuthError =
           message === 'Token inválido ou expirado' ||
           message === 'Token invalido ou expirado';
-        const isPublicOperation = PUBLIC_OPERATIONS.has(operation.operationName);
+        const isPublicOperationName = isPublicOperation(operation.operationName);
 
-        if (isAuthError && !isPublicOperation) {
+        if (isAuthError && !isPublicOperationName) {
           localStorage.removeItem('VERDEVIA_token');
           localStorage.removeItem('verdevia_user');
           window.location.href = '/autenticacao/administrador/login';
@@ -94,7 +98,7 @@ const errorLink = new ErrorLink(({ error, operation }) => {
  */
 const authLink = new ApolloLink((operation, forward) => {
   if (typeof window !== 'undefined') {
-    const token = PUBLIC_OPERATIONS.has(operation.operationName)
+    const token = isPublicOperation(operation.operationName)
       ? null
       : localStorage.getItem('VERDEVIA_token');
     if (token) {

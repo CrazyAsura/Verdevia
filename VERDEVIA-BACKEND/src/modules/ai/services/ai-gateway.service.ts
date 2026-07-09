@@ -75,4 +75,51 @@ export class AiGatewayService {
       clearTimeout(timeout);
     }
   }
+
+  async generateChatResponse(message: string, context?: string): Promise<string> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      this.logger.log(`Enviando chat RAG para AI Gateway em ${this.baseUrl}`);
+
+      const response = await fetch(`${this.baseUrl}/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          context: context ?? '',
+          history: [],
+          documentIds: [],
+          allowWebSearch: false,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        this.logger.error(
+          `AI Gateway chat respondeu ${response.status}: ${body}`,
+        );
+        throw new BadGatewayException(
+          'Falha ao gerar resposta no serviço de IA.',
+        );
+      }
+
+      const payload = (await response.json()) as { answer?: string };
+      return payload.answer ?? '';
+    } catch (error) {
+      if (error instanceof BadGatewayException) {
+        throw error;
+      }
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`AI Gateway chat indisponível: ${errorMessage}`);
+      throw new ServiceUnavailableException(
+        'Serviço de IA indisponível no momento.',
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
 }

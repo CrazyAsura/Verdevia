@@ -31,16 +31,16 @@ export function HorizontalStories() {
       ref={targetRef} 
       className={isMobile ? "relative bg-background py-24 overflow-hidden" : "relative h-[400vh] bg-background"}
     >
-      <div 
-        className={isMobile ? "relative flex flex-col px-6" : "sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden"}
+      <div
+        className={isMobile ? "relative flex flex-col px-6" : "sticky top-0 h-screen flex flex-col items-center justify-center gap-8 overflow-hidden py-10"}
       >
-        <div className={isMobile ? "w-full mb-12" : "container mx-auto px-6 mb-16"}>
+        <div className={isMobile ? "w-full mb-12" : "container mx-auto px-6"}>
            <motion.div
              initial={{ opacity: 0, x: -50 }}
              whileInView={{ opacity: 1, x: 0 }}
              transition={{ duration: 0.8 }}
            >
-             <h2 className="text-4xl sm:text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-none">
+             <h2 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-black uppercase italic tracking-tighter leading-none">
                Histórias de <br />
                <span className="text-primary text-glow">Impacto Brasil</span>
              </h2>
@@ -56,7 +56,7 @@ export function HorizontalStories() {
               key={i} 
               className={isMobile 
                 ? "relative h-[450px] w-72 shrink-0 snap-center group cursor-pointer overflow-hidden rounded-2xl border border-white/5" 
-                : "relative h-[600px] w-72 shrink-0 group cursor-pointer overflow-hidden rounded-2xl border border-white/5"
+                : "relative h-[58vh] max-h-[600px] w-72 shrink-0 group cursor-pointer overflow-hidden rounded-2xl border border-white/5"
               }
             >
                 <Image 
