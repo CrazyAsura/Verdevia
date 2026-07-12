@@ -8,7 +8,7 @@ param(
 $ROOT = $PSScriptRoot
 $composeArgs = @(
   "compose",
-  "--env-file", (Join-Path $ROOT "VERDEVIA-BACKEND\.env"),
+  "--env-file", (Join-Path $ROOT "VERDEVIA-MOBILE-BACKEND\.env"),
   "--env-file", (Join-Path $ROOT "VERDEVIA-WEB\.env"),
   "-f", (Join-Path $ROOT "docker-compose.yml")
 )
@@ -18,7 +18,12 @@ $services = @(
   "mongodb",
   "redis",
   "kafka",
-  "backend",
+  "mobile-backend",
+  "web-backend",
+  "chatbot-backend",
+  "admin-backend",
+  "mobile-gateway",
+  "web-gateway",
   "frontend",
   "nginx"
 )

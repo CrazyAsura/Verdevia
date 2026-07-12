@@ -1,7 +1,7 @@
 services:
-  backend:
+  mobile-backend:
     build:
-      context: ./VERDEVIA-BACKEND
+      context: ./VERDEVIA-MOBILE-BACKEND
       dockerfile: Dockerfile.dev
       args:
         - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
@@ -9,20 +9,20 @@ services:
         - HTTPS_PROXY=${HTTPS_PROXY:-}
         - NO_PROXY=${NO_PROXY:-}
     env_file:
-      - ./VERDEVIA-BACKEND/.env
+      - ./VERDEVIA-MOBILE-BACKEND/.env
+    command: ["yarn", "nest", "start", "--watch"]
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=false
       - WATCHPACK_POLLING=false
       - KAFKA_ENABLED=${KAFKA_ENABLED:-false}
       - KAFKA_CONSUMER_ENABLED=${KAFKA_CONSUMER_ENABLED:-false}
-      - MONGODB_ENABLED=${MONGODB_ENABLED:-false}
-      - AI_GATEWAY_URL=${AI_GATEWAY_URL:-http://fastapi-ai-gateway:8000}
-      - AI_GATEWAY_TIMEOUT_MS=${AI_GATEWAY_TIMEOUT_MS:-120000}
+      - MONGODB_ENABLED=false
+      - BACKEND_PORT=3334
     develop:
       watch:
         - action: sync
-          path: ./VERDEVIA-BACKEND
+          path: ./VERDEVIA-MOBILE-BACKEND
           target: /app
           initial_sync: true
           ignore:
@@ -36,6 +36,194 @@ services:
             - Dockerfile.dev
             - package.json
             - package-lock.json
+
+  web-backend:
+    build:
+      context: ./VERDEVIA-WEB-BACKEND
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-WEB-BACKEND/.env
+    command: ["yarn", "nest", "start", "--watch"]
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=false
+      - WATCHPACK_POLLING=false
+      - KAFKA_ENABLED=${KAFKA_ENABLED:-false}
+      - KAFKA_CONSUMER_ENABLED=${KAFKA_CONSUMER_ENABLED:-false}
+      - MONGODB_ENABLED=${MONGODB_ENABLED:-false}
+      - BACKEND_PORT=3336
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-WEB-BACKEND
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - database/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json
+
+  chatbot-backend:
+    build:
+      context: ./VERDEVIA-CHATBOT-BACKEND
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-CHATBOT-BACKEND/.env
+    command: ["yarn", "nest", "start", "--watch"]
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=false
+      - WATCHPACK_POLLING=false
+      - KAFKA_ENABLED=${KAFKA_ENABLED:-false}
+      - KAFKA_CONSUMER_ENABLED=${KAFKA_CONSUMER_ENABLED:-false}
+      - MONGODB_ENABLED=false
+      - BACKEND_PORT=3337
+      - AI_GATEWAY_URL=${AI_GATEWAY_URL:-http://fastapi-ai-gateway:8000}
+      - AI_GATEWAY_TIMEOUT_MS=${AI_GATEWAY_TIMEOUT_MS:-120000}
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-CHATBOT-BACKEND
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - database/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json
+
+  admin-backend:
+    build:
+      context: ./VERDEVIA-ADMIN-BACKEND
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-ADMIN-BACKEND/.env
+    command: ["yarn", "nest", "start", "--watch"]
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=false
+      - WATCHPACK_POLLING=false
+      - KAFKA_ENABLED=${KAFKA_ENABLED:-false}
+      - KAFKA_CONSUMER_ENABLED=${KAFKA_CONSUMER_ENABLED:-false}
+      - MONGODB_ENABLED=false
+      - BACKEND_PORT=3338
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-ADMIN-BACKEND
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - database/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json
+
+  mobile-gateway:
+    build:
+      context: ./VERDEVIA-MOBILE-GATEWAY
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-MOBILE-GATEWAY/.env
+    command: ["yarn", "nest", "start", "--watch"]
+    environment:
+      - NODE_ENV=development
+      - MOBILE_GATEWAY_PORT=3333
+      - MOBILE_BACKEND_SUBGRAPH_URL=http://mobile-backend:3334/graphql
+      - CHATBOT_BACKEND_SUBGRAPH_URL=http://chatbot-backend:3337/graphql
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-MOBILE-GATEWAY
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - database/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json
+
+  web-gateway:
+    build:
+      context: ./VERDEVIA-WEB-GATEWAY
+      dockerfile: Dockerfile.dev
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    env_file:
+      - ./VERDEVIA-WEB-GATEWAY/.env
+    command: ["yarn", "nest", "start", "--watch"]
+    environment:
+      - NODE_ENV=development
+      - WEB_GATEWAY_PORT=3335
+      - WEB_BACKEND_SUBGRAPH_URL=http://web-backend:3336/graphql
+      - CHATBOT_BACKEND_SUBGRAPH_URL=http://chatbot-backend:3337/graphql
+      - ADMIN_BACKEND_SUBGRAPH_URL=http://admin-backend:3338/graphql
+    develop:
+      watch:
+        - action: sync
+          path: ./VERDEVIA-WEB-GATEWAY
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - database/
+            - coverage/
+            - .git/
+            - .dockerignore
+            - Dockerfile
+            - Dockerfile.dev
+            - package.json
+            - package-lock.json
+
   frontend:
     build:
       context: ./VERDEVIA-WEB
@@ -50,7 +238,7 @@ services:
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=false
-      - BACKEND_INTERNAL_URL=http://backend:3333
+      - BACKEND_INTERNAL_URL=http://web-gateway:3335
     develop:
       watch:
         - action: sync

@@ -75,6 +75,17 @@ def build_ai_router(
                 detail=f"Falha ao indexar documentos no RAG: {exc}",
             ) from exc
 
+    @router.get("/ai/rag/documents", response_model=DocumentIngestResponse)
+    def list_documents() -> DocumentIngestResponse:
+        return DocumentIngestResponse(
+            documents=[
+                IngestedDocument.model_validate(record)
+                for record in rag_engine.list_documents()
+            ],
+            collection=settings.rag_collection_name,
+            persistDir=settings.chroma_persist_dir,
+        )
+
     @router.post("/ai/chat", response_model=RAGChatResponse)
     def rag_chat(payload: RAGChatRequest) -> RAGChatResponse:
         try:

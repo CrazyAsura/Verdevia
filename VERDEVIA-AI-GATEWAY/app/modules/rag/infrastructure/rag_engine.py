@@ -36,6 +36,7 @@ TEXT_EXTENSIONS = {
 }
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tiff"}
 
+POWER_BI_EXTENSIONS = {".pbix", ".pbit"}
 
 class BoundedCache:
     def __init__(self, max_size: int) -> None:
@@ -68,6 +69,8 @@ class MultimodalExtractor:
             return self._extract_spreadsheet(path, metadata)
         if extension == ".pptx":
             return self._extract_presentation(path, metadata)
+        if extension in POWER_BI_EXTENSIONS:
+            return self._extract_power_bi(path, metadata)
         if extension in IMAGE_EXTENSIONS or content_type.startswith("image/"):
             return self._extract_image(path, metadata)
         if extension in TEXT_EXTENSIONS or content_type.startswith("text/"):
@@ -180,6 +183,16 @@ class MultimodalExtractor:
             visual_summary += f"Texto OCR extraído:\n{ocr_text}"
             return visual_summary, ["image", "ocr", "diagram"], metadata
         return visual_summary, ["image", "diagram"], metadata
+    def _extract_power_bi(self, path: Path, metadata: dict[str, Any]) -> tuple[str, list[str], dict[str, Any]]:
+        # PBIX/PBIT are binary Power BI containers. Keep metadata rather than
+        # attempting a UTF-8 decode; a dedicated connector can enrich it later.
+        metadata["sizeBytes"] = path.stat().st_size
+        metadata["warning"] = "PBIX/PBIT armazenado; a extração do modelo requer conector Power BI."
+        return (
+            f"Arquivo Power BI: {path.name}. Tipo: {path.suffix[1:].upper()}.",
+            ["power-bi", "binary"],
+            metadata,
+        )
 
 
 class RAGEngine:
@@ -297,6 +310,11 @@ class RAGEngine:
             unique.values(),
             key=lambda doc: int(doc.metadata.get("source_priority", 99)),
         )[:top_k]
+
+    def list_documents(self) -> list[dict[str, Any]]:
+        """List indexed documents without exposing internal storage paths."""
+        records = list(self._manifest.values())
+        return sorted(records, key=lambda item: item.get("filename", "").lower())
 
     def cache_key(self, message: str, context: str, document_ids: list[str]) -> str:
         normalized = json.dumps(

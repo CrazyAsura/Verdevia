@@ -176,18 +176,15 @@ EXPO_PUBLIC_API_URL=http://localhost:3333
 
 ```text
 .
-├── VERDEVIA-BACKEND/       # API NestJS (Arquitetura Layered & Modular)
-│   ├── src/modules/        # Módulos independentes (SOLID)
-│   ├── src/database/       # Migrations e Seeders
-│   └── test/               # Suíte de Testes (E2E e Unitários)
-├── VERDEVIA-MOBILE/        # App Expo (Mobile)
-│   ├── app/                # File-based Routing (Expo Router)
-│   ├── components/         # UI Atoms & Molecules
-│   ├── store/              # Redux State Management
-│   └── services/           # API Consumers (Axios)
-├── VERDEVIA-WEB/           # Portal Web Next.js
-│   ├── src/app/            # App Router pages
-│   └── src/components/     # Componentes React
+├── VERDEVIA-COMMON/        # Biblioteca compartilhada (DTOs, Ports, Security)
+├── VERDEVIA-MOBILE-BACKEND/# Microsserviço Mobile (Complaints, Gamification)
+├── VERDEVIA-WEB-BACKEND/   # Microsserviço Web (Forum, Courses, Subscriptions)
+├── VERDEVIA-CHATBOT-BACKEND/# Microsserviço Chatbot (AI)
+├── VERDEVIA-ADMIN-BACKEND/ # Microsserviço Admin (Stats, Compliance Audits)
+├── VERDEVIA-MOBILE-GATEWAY/# Gateway API federado (BFF Mobile) - Port 3333
+├── VERDEVIA-WEB-GATEWAY/   # Gateway API federado (BFF Web) - Port 3335
+├── VERDEVIA-MOBILE/        # App Expo (Mobile Client)
+├── VERDEVIA-WEB/           # Portal Web Next.js (Web Client)
 └── docs/                   # Documentação técnica adicional
 ```
 
@@ -195,14 +192,20 @@ EXPO_PUBLIC_API_URL=http://localhost:3333
 
 ## 🛠️ Execução Local
 
-O ecossistema Antigravity pode ser executado de forma manual ou orquestrada via Docker.
+O ecossistema Antigravity pode ser executado de forma orquestrada via Docker Compose.
 
 ### 1. Via Docker (Recomendado - Meta Standard)
-A infraestrutura é segmentada para máxima performance e isolamento. Para evitar problemas de dependências não declaradas entre arquivos separados, inicialize o ecossistema completo de forma conjunta:
+A infraestrutura é segmentada em microsserviços distribuídos e independentes. Para inicializar o ecossistema completo de desenvolvimento, utilize o script automatizado:
+
+```powershell
+# Iniciar todo o ecossistema em modo desenvolvimento
+.\dev.ps1
+```
+
+Ou manualmente via Compose:
 
 ```bash
-# Iniciar todo o ecossistema (Infraestrutura, Backend e Frontend)
-docker compose up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ### 2. Execução Manual (Desenvolvimento)

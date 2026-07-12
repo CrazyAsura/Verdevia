@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "gemma:e2b"
+    ollama_model: str = "gemma4:e4b"
     ollama_fallback_model: str = "gemma4:e4b"
     ollama_embedding_model: str = "nomic-embed-text"
     ai_gateway_log_level: str = "INFO"

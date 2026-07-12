@@ -1,0 +1,20 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+ENV NPM_CONFIG_LOGLEVEL=warn
+
+COPY package*.json ./
+
+ARG YARN_REGISTRY=https://registry.npmmirror.com
+RUN yarn config set strict-ssl false && \
+    yarn config set registry $YARN_REGISTRY && \
+    yarn install
+
+
+COPY . .
+
+EXPOSE 3336
+
+CMD ["yarn", "start:dev"]
+
