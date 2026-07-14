@@ -1,0 +1,129 @@
+# =============================================================================
+# ECOA - Mobile App Domain Compose (Independent Repository Setup)
+# =============================================================================
+
+services:
+  # ── Backend Mobile Svc
+  mobile-backend:
+    build:
+      context: ./ECOA-MOBILE-BACKEND
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_mobile_backend
+    env_file:
+      - path: ./ECOA-MOBILE-BACKEND/.env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3334:3334"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-ecoa_user}
+      DB_PASSWORD: ${DB_PASSWORD:-ecoa_password}
+      DB_NAME: ${DB_NAME:-ecoa_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-ecoa_redis_password}
+      KAFKA_BROKERS: kafka:9094
+      KAFKA_CLIENT_ID: ECOA-mobile-backend
+      KAFKA_CONSUMER_ENABLED: "true"
+      BACKEND_PORT: 3334
+    networks:
+      - ECOA_mobile_net  # gateway <-> backend communication
+      - ECOA_infra_net   # access to postgres, redis, kafka
+    volumes:
+      - ./ECOA-MOBILE-BACKEND/database:/app/database
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3334/health', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # ── Mobile API Gateway (GraphQL Federation)
+  mobile-gateway:
+    build:
+      context: ./ECOA-MOBILE-GATEWAY
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_mobile_gateway
+    env_file:
+      - path: ./ECOA-MOBILE-GATEWAY/.env
+        required: false
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    command: ["yarn", "start:prod"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MOBILE_GATEWAY_PORT: 3333
+      MOBILE_BACKEND_SUBGRAPH_URL: http://mobile-backend:3334/graphql
+      CHATBOT_BACKEND_SUBGRAPH_URL: http://chatbot-backend:3337/graphql
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+    networks:
+      - ECOA_mobile_net    # <-> mobile-backend
+      - ECOA_chatbot_net   # <-> chatbot-backend
+      - ECOA_proxy_net     # <-> nginx edge
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3333/graphql?query=%7B__schema%7BqueryType%7Bname%7D%7D%7D', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ── Nginx Edge Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: ECOA_nginx_mobile
+    ports:
+      - "8084:80"
+      - "8444:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../certs:/etc/nginx/certs:ro
+    restart: unless-stopped
+    networks:
+      - ECOA_proxy_net
+      - ECOA_mobile_net
+      - ECOA_infra_net
+
+# =============================================================================
+# NETWORKS - Redes externas gerenciadas pela infraestrutura comum
+# =============================================================================
+networks:
+  ECOA_infra_net:
+    name: ECOA_infra_net
+    external: true
+  ECOA_mobile_net:
+    name: ECOA_mobile_net
+    external: true
+  ECOA_chatbot_net:
+    name: ECOA_chatbot_net
+    external: true
+  ECOA_proxy_net:
+    name: ECOA_proxy_net
+    external: true

@@ -1,0 +1,43 @@
+{
+    "compilerOptions":  {
+                            "module":  "commonjs",
+                            "declaration":  true,
+                            "removeComments":  true,
+                            "emitDecoratorMetadata":  true,
+                            "experimentalDecorators":  true,
+                            "allowSyntheticDefaultImports":  true,
+                            "target":  "ESNext",
+                            "sourceMap":  true,
+                            "outDir":  "./dist",
+                            "baseUrl":  "./",
+                            "incremental":  true,
+                            "skipLibCheck":  true,
+                            "strict":  false,
+                            "noImplicitAny":  false,
+                            "strictBindCallApply":  false,
+                            "forceConsistentCasingInFileNames":  false,
+                            "noFallthroughCasesInSwitch":  false,
+                            "moduleResolution":  "node",
+                            "paths":  {
+                                          "@/*":  [
+                                                      "src/*"
+                                                  ],
+                                          "app/common":  [
+                                                             "../../ECOA-COMMON/src"
+                                                         ],
+                                          "app/common/*":  [
+                                                               "../../ECOA-COMMON/src/*"
+                                                           ]
+                                      }
+                        },
+    "include":  [
+                    "src/**/*"
+                ],
+    "exclude": ["node_modules", "../node_modules",
+                    "dist",
+                    "test",
+                    "**/*spec.ts",
+                    "src/database/seed.ts"
+                ]
+}
+

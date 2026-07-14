@@ -1,0 +1,46 @@
+# =============================================================================
+# ECOA - FastAPI AI Gateway Isolated Svc
+# =============================================================================
+
+services:
+  fastapi-ai-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PIP_INDEX_URL=${PIP_INDEX_URL:-https://pypi.org/simple}
+        - PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST:-pypi.org files.pythonhosted.org pypi.python.org}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_fastapi_ai_gateway
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma4:e4b}
+      OLLAMA_FALLBACK_MODEL: ${OLLAMA_FALLBACK_MODEL:-gemma4:e2b}
+      AI_GATEWAY_LOG_LEVEL: ${AI_GATEWAY_LOG_LEVEL:-INFO}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ECOA_infra_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  ECOA_infra_net:
+    name: ECOA_infra_net
+    external: true

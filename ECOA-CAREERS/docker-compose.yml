@@ -1,0 +1,129 @@
+# =============================================================================
+# ECOA - Careers Domain Compose (Independent Repository Setup)
+# =============================================================================
+
+services:
+  # ── Backend Careers Admin Svc
+  backend-careers-admin:
+    build:
+      context: ./ECOA-BACKEND-CAREERS-ADMIN
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_backend_careers_admin
+    env_file:
+      - path: ./ECOA-BACKEND-CAREERS-ADMIN/.env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3339:3339"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-ecoa_user}
+      DB_PASSWORD: ${DB_PASSWORD:-ecoa_password}
+      DB_NAME: ${DB_NAME:-ecoa_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-ecoa_redis_password}
+      BACKEND_PORT: 3339
+    networks:
+      - ECOA_infra_net
+      - ECOA_web_net
+
+  # ── Frontend Careers (Next.js Careers Portal)
+  frontend-careers:
+    build:
+      context: ./ECOA-WEB-CAREERS
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/api/careers/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_frontend_careers
+    env_file:
+      - path: ./ECOA-WEB-CAREERS/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/api/careers/graphql}
+      - CAREERS_ADMIN_GRAPHQL_URL=${CAREERS_ADMIN_GRAPHQL_URL:-http://backend-careers-admin:3339/graphql}
+    ports:
+      - "3003:3000"
+    networks:
+      - ECOA_proxy_net
+      - ECOA_web_net
+
+  # ── Frontend Careers Admin (Next.js Careers Admin Panel)
+  frontend-careers-admin:
+    build:
+      context: ./ECOA-WEB-CAREERS-ADMIN
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/api/careers/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_frontend_careers_admin
+    env_file:
+      - path: ./ECOA-WEB-CAREERS-ADMIN/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/api/careers/graphql}
+      - CAREERS_ADMIN_GRAPHQL_URL=${CAREERS_ADMIN_GRAPHQL_URL:-http://backend-careers-admin:3339/graphql}
+    ports:
+      - "3004:3000"
+    networks:
+      - ECOA_proxy_net
+      - ECOA_web_net
+
+  # ── Nginx Edge Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: ECOA_nginx_careers
+    ports:
+      - "8083:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../certs:/etc/nginx/certs:ro
+    restart: unless-stopped
+    networks:
+      - ECOA_proxy_net
+      - ECOA_web_net
+      - ECOA_infra_net
+
+# =============================================================================
+# NETWORKS - Redes externas gerenciadas pela infraestrutura comum
+# =============================================================================
+networks:
+  ECOA_infra_net:
+    name: ECOA_infra_net
+    external: true
+  ECOA_web_net:
+    name: ECOA_web_net
+    external: true
+  ECOA_proxy_net:
+    name: ECOA_proxy_net
+    external: true

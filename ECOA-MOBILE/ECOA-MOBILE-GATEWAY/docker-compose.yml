@@ -1,0 +1,43 @@
+# =============================================================================
+# ECOA - Mobile Gateway Isolated Svc
+# =============================================================================
+
+services:
+  mobile-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+    container_name: ECOA_mobile_gateway
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    command: ["yarn", "start:prod"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MOBILE_GATEWAY_PORT: 3333
+      MOBILE_BACKEND_SUBGRAPH_URL: http://mobile-backend:3334/graphql
+      CHATBOT_BACKEND_SUBGRAPH_URL: http://chatbot-backend:3337/graphql
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+    networks:
+      - ECOA_mobile_net
+      - ECOA_chatbot_net
+      - ECOA_proxy_net
+
+networks:
+  ECOA_mobile_net:
+    name: ECOA_mobile_net
+    external: true
+  ECOA_chatbot_net:
+    name: ECOA_chatbot_net
+    external: true
+  ECOA_proxy_net:
+    name: ECOA_proxy_net
+    external: true

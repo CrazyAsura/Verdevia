@@ -1,0 +1,48 @@
+# =============================================================================
+# ECOA - Web Gateway Isolated Svc
+# =============================================================================
+
+services:
+  web-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+    container_name: ECOA_web_gateway
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "3335:3335"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    command: ["yarn", "start:prod"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      WEB_GATEWAY_PORT: 3335
+      WEB_BACKEND_SUBGRAPH_URL: http://web-backend:3336/graphql
+      ADMIN_BACKEND_SUBGRAPH_URL: http://admin-backend:3338/graphql
+      CHATBOT_BACKEND_SUBGRAPH_URL: http://chatbot-backend:3337/graphql
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+    networks:
+      - ECOA_web_net
+      - ECOA_admin_net
+      - ECOA_chatbot_net
+      - ECOA_proxy_net
+
+networks:
+  ECOA_web_net:
+    name: ECOA_web_net
+    external: true
+  ECOA_admin_net:
+    name: ECOA_admin_net
+    external: true
+  ECOA_chatbot_net:
+    name: ECOA_chatbot_net
+    external: true
+  ECOA_proxy_net:
+    name: ECOA_proxy_net
+    external: true

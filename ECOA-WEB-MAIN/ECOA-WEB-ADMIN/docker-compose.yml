@@ -1,0 +1,47 @@
+services:
+  frontend-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: ECOA_frontend_admin
+    env_file:
+      - .env
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+      # SSR rewrites proxy to web-gateway (admin routes: painel, administrador, super-admin, etc.)
+      - BACKEND_INTERNAL_URL=http://web-gateway:3335
+    ports:
+      - "3001:3000"
+    networks:
+      - ECOA_proxy_net  # <-> nginx edge
+      - ECOA_admin_net  # <-> web-gateway for SSR rewrites (admin routes)
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  ECOA_proxy_net:
+    name: ECOA_proxy_net
+    external: true
+  ECOA_admin_net:
+    name: ECOA_admin_net
+    external: true
