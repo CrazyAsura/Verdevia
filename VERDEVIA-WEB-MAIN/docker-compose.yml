@@ -1,0 +1,312 @@
+# =============================================================================
+# VERDEVIA - Web & Admin Domain Compose (Independent Repository Setup)
+# =============================================================================
+
+services:
+  # ── Backend Web Svc
+  web-backend:
+    build:
+      context: ./VERDEVIA-WEB-BACKEND
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_web_backend
+    env_file:
+      - path: ./VERDEVIA-WEB-BACKEND/.env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3336:3336"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-verdevia_user}
+      DB_PASSWORD: ${DB_PASSWORD:-verdevia_password}
+      DB_NAME: ${DB_NAME:-verdevia_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-verdevia_redis_password}
+      MONGODB_URI: mongodb://verdevia_app:verdevia_app_password_dev@mongodb:27017/verdevia
+      KAFKA_BROKERS: kafka:9094
+      KAFKA_CLIENT_ID: VERDEVIA-web-backend
+      KAFKA_CONSUMER_ENABLED: "true"
+      BACKEND_PORT: 3336
+    networks:
+      - VERDEVIA_web_net   # gateway <-> backend communication
+      - VERDEVIA_infra_net # access to postgres, redis, kafka, mongodb
+    volumes:
+      - ./VERDEVIA-WEB-BACKEND/database:/app/database
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3336/health', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # ── Backend Administrative Svc
+  admin-backend:
+    build:
+      context: ./VERDEVIA-ADMIN-BACKEND
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_admin_backend
+    env_file:
+      - path: ./VERDEVIA-ADMIN-BACKEND/.env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3338:3338"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-verdevia_user}
+      DB_PASSWORD: ${DB_PASSWORD:-verdevia_password}
+      DB_NAME: ${DB_NAME:-verdevia_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-verdevia_redis_password}
+      KAFKA_BROKERS: kafka:9094
+      KAFKA_CLIENT_ID: VERDEVIA-admin-backend
+      KAFKA_CONSUMER_ENABLED: "true"
+      BACKEND_PORT: 3338
+    networks:
+      - VERDEVIA_admin_net  # gateway <-> admin-backend communication
+      - VERDEVIA_infra_net  # access to postgres, redis, kafka
+    volumes:
+      - ./VERDEVIA-ADMIN-BACKEND/database:/app/database
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3338/health', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # ── Web API Gateway (GraphQL Federation)
+  web-gateway:
+    build:
+      context: ./VERDEVIA-WEB-GATEWAY
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_web_gateway
+    env_file:
+      - path: ./VERDEVIA-WEB-GATEWAY/.env
+        required: false
+    ports:
+      - "3335:3335"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    command: ["yarn", "start:prod"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      WEB_GATEWAY_PORT: 3335
+      WEB_BACKEND_SUBGRAPH_URL: http://web-backend:3336/graphql
+      ADMIN_BACKEND_SUBGRAPH_URL: http://admin-backend:3338/graphql
+      CHATBOT_BACKEND_SUBGRAPH_URL: http://chatbot-backend:3337/graphql
+      CAREERS_BACKEND_SUBGRAPH_URL: http://backend-careers-admin:3339/graphql
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+    networks:
+      - VERDEVIA_web_net      # <-> web-backend
+      - VERDEVIA_admin_net    # <-> admin-backend
+      - VERDEVIA_chatbot_net  # <-> chatbot-backend
+      - VERDEVIA_proxy_net    # <-> nginx edge
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3335/graphql?query=%7B__schema%7BqueryType%7Bname%7D%7D%7D', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ── Frontend Main (Next.js Public Portal)
+  frontend-main:
+    build:
+      context: ./VERDEVIA-WEB-MAIN
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_frontend_main
+    env_file:
+      - path: ./VERDEVIA-WEB-MAIN/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+      - BACKEND_INTERNAL_URL=http://web-gateway:3335
+    ports:
+      - "3000:3000"
+    networks:
+      - VERDEVIA_proxy_net  # <-> nginx edge
+      - VERDEVIA_web_net    # <-> web-gateway for SSR rewrites
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── Frontend Admin (Next.js Admin Panel)
+  frontend-admin:
+    build:
+      context: ./VERDEVIA-WEB-ADMIN
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_frontend_admin
+    env_file:
+      - path: ./VERDEVIA-WEB-ADMIN/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+      - BACKEND_INTERNAL_URL=http://web-gateway:3335
+    ports:
+      - "3001:3000"
+    networks:
+      - VERDEVIA_proxy_net  # <-> nginx edge
+      - VERDEVIA_admin_net  # <-> web-gateway for SSR rewrites (admin routes)
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── Frontend Chatbot (Next.js Chatbot UI)
+  frontend-chatbot:
+    build:
+      context: ../VERDEVIA-CHATBOT/VERDEVIA-WEB-CHATBOT
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_frontend_chatbot
+    env_file:
+      - path: ../VERDEVIA-CHATBOT/VERDEVIA-WEB-CHATBOT/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+      - BACKEND_INTERNAL_URL=http://web-gateway:3335
+    ports:
+      - "3002:3000"
+    networks:
+      - VERDEVIA_proxy_net    # <-> nginx edge
+      - VERDEVIA_chatbot_net  # <-> web-gateway for SSR rewrites (chatbot/AI routes)
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── Nginx Edge Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: VERDEVIA_nginx_web_main
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../certs:/etc/nginx/certs:ro
+    restart: unless-stopped
+    networks:
+      - VERDEVIA_proxy_net
+      - VERDEVIA_web_net
+      - VERDEVIA_admin_net
+      - VERDEVIA_chatbot_net
+      - VERDEVIA_infra_net
+
+# =============================================================================
+# NETWORKS - Redes externas gerenciadas pela infraestrutura comum
+# =============================================================================
+networks:
+  VERDEVIA_infra_net:
+    name: VERDEVIA_infra_net
+    external: true
+  VERDEVIA_web_net:
+    name: VERDEVIA_web_net
+    external: true
+  VERDEVIA_admin_net:
+    name: VERDEVIA_admin_net
+    external: true
+  VERDEVIA_chatbot_net:
+    name: VERDEVIA_chatbot_net
+    external: true
+  VERDEVIA_proxy_net:
+    name: VERDEVIA_proxy_net
+    external: true

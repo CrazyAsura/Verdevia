@@ -1,0 +1,43 @@
+# =============================================================================
+# VERDEVIA - Backend Careers Admin Isolated Svc
+# =============================================================================
+
+services:
+  backend-careers-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+    container_name: VERDEVIA_backend_careers_admin
+    env_file:
+      - path: .env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3339:3339"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-verdevia_user}
+      DB_PASSWORD: ${DB_PASSWORD:-verdevia_password}
+      DB_NAME: ${DB_NAME:-verdevia_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-verdevia_redis_password}
+      BACKEND_PORT: 3339
+    networks:
+      - VERDEVIA_infra_net
+      - VERDEVIA_web_net
+
+networks:
+  VERDEVIA_infra_net:
+    name: VERDEVIA_infra_net
+    external: true
+  VERDEVIA_web_net:
+    name: VERDEVIA_web_net
+    external: true

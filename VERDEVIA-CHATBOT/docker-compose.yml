@@ -1,0 +1,272 @@
+# =============================================================================
+# VERDEVIA - Chatbot Domain Compose (Independent Repository Setup)
+# =============================================================================
+
+services:
+  # ── FastAPI AI Gateway
+  fastapi-ai-gateway:
+    build:
+      context: ./VERDEVIA-AI-GATEWAY
+      dockerfile: Dockerfile
+      args:
+        - PIP_INDEX_URL=${PIP_INDEX_URL:-https://pypi.org/simple}
+        - PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST:-pypi.org files.pythonhosted.org pypi.python.org}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_fastapi_ai_gateway
+    env_file:
+      - path: ./VERDEVIA-AI-GATEWAY/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma4:e4b}
+      OLLAMA_FALLBACK_MODEL: ${OLLAMA_FALLBACK_MODEL:-gemma4:e2b}
+      AI_GATEWAY_LOG_LEVEL: ${AI_GATEWAY_LOG_LEVEL:-INFO}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - VERDEVIA_infra_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Backend Chatbot Svc
+  chatbot-backend:
+    build:
+      context: ./VERDEVIA-CHATBOT-BACKEND
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_chatbot_backend
+    env_file:
+      - path: ./VERDEVIA-CHATBOT-BACKEND/.env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3337:3337"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-verdevia_user}
+      DB_PASSWORD: ${DB_PASSWORD:-verdevia_password}
+      DB_NAME: ${DB_NAME:-verdevia_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-verdevia_redis_password}
+      KAFKA_BROKERS: kafka:9094
+      KAFKA_CLIENT_ID: VERDEVIA-chatbot-backend
+      KAFKA_CONSUMER_ENABLED: "true"
+      PORT: 3337
+      BACKEND_PORT: 3337
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://fastapi-ai-gateway:8000}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-REPLACE_WITH_64_CHAR_HEX_VALUE_IN_PRODUCTION_00000000000000000000}
+    depends_on:
+      fastapi-ai-gateway:
+        condition: service_healthy
+    networks:
+      - VERDEVIA_chatbot_net
+      - VERDEVIA_infra_net
+    volumes:
+      - ./VERDEVIA-CHATBOT-BACKEND/database:/app/database
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3337/health', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # ── Backend Chatbot Admin Svc
+  chatbot-backend-admin:
+    build:
+      context: ./VERDEVIA-BACKEND-CHATBOT-ADMIN
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_chatbot_backend_admin
+    env_file:
+      - path: ./VERDEVIA-BACKEND-CHATBOT-ADMIN/.env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3336:3336"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3336
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-verdevia_user}
+      DB_PASSWORD: ${DB_PASSWORD:-verdevia_password}
+      DB_NAME: ${DB_NAME:-verdevia_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-verdevia_redis_password}
+      KAFKA_BROKERS: kafka:9094
+      KAFKA_CLIENT_ID: VERDEVIA-chatbot-backend-admin
+      KAFKA_CONSUMER_ENABLED: "true"
+      BACKEND_PORT: 3336
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://fastapi-ai-gateway:8000}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-REPLACE_WITH_64_CHAR_HEX_VALUE_IN_PRODUCTION_00000000000000000000}
+    depends_on:
+      fastapi-ai-gateway:
+        condition: service_healthy
+    networks:
+      - VERDEVIA_chatbot_net
+      - VERDEVIA_infra_net
+    volumes:
+      - ./VERDEVIA-BACKEND-CHATBOT-ADMIN/database:/app/database
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3336/health', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # ── Frontend Chatbot (Next.js Chatbot UI)
+  frontend-chatbot:
+    build:
+      context: ./VERDEVIA-WEB-CHATBOT
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_frontend_chatbot
+    env_file:
+      - path: ./VERDEVIA-WEB-CHATBOT/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+      - BACKEND_INTERNAL_URL=http://web-gateway:3335
+    ports:
+      - "3002:3000"
+    networks:
+      - VERDEVIA_proxy_net
+      - VERDEVIA_chatbot_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── Frontend Chatbot Admin (Next.js Chatbot Admin UI)
+  frontend-chatbot-admin:
+    build:
+      context: ./VERDEVIA-WEB-CHATBOT-ADMIN
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+        - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+        - NO_PROXY=${NO_PROXY:-}
+    container_name: VERDEVIA_frontend_chatbot_admin
+    env_file:
+      - path: ./VERDEVIA-WEB-CHATBOT-ADMIN/.env
+        required: false
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL:-/graphql}
+      - BACKEND_INTERNAL_URL=http://chatbot-backend-admin:3336
+    ports:
+      - "3005:3000"
+    networks:
+      - VERDEVIA_proxy_net
+      - VERDEVIA_chatbot_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── Nginx Edge Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: VERDEVIA_nginx_chatbot
+    ports:
+      - "8082:80"
+      - "8442:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../certs:/etc/nginx/certs:ro
+    restart: unless-stopped
+    networks:
+      - VERDEVIA_proxy_net
+      - VERDEVIA_chatbot_net
+      - VERDEVIA_infra_net
+
+# =============================================================================
+# NETWORKS - Redes externas gerenciadas pela infraestrutura comum
+# =============================================================================
+networks:
+  VERDEVIA_infra_net:
+    name: VERDEVIA_infra_net
+    external: true
+  VERDEVIA_chatbot_net:
+    name: VERDEVIA_chatbot_net
+    external: true
+  VERDEVIA_proxy_net:
+    name: VERDEVIA_proxy_net
+    external: true

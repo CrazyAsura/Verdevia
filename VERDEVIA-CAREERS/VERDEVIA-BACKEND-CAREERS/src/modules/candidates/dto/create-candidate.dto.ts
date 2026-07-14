@@ -1,0 +1,5 @@
+import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+export class PhoneDto { @IsString() @IsNotEmpty() ddi:string; @IsString() @IsNotEmpty() ddd:string; @IsString() @IsNotEmpty() number:string; }
+export class AddressDto { @IsString() @IsNotEmpty() zipCode:string; @IsString() @IsNotEmpty() street:string; @IsString() @IsNotEmpty() number:string; @IsString() @IsOptional() complement?:string; @IsString() @IsNotEmpty() district:string; @IsString() @IsNotEmpty() city:string; @IsString() @IsNotEmpty() state:string; @IsString() @IsOptional() country?:string; }
+export class CreateCandidateDto { @IsString() @IsNotEmpty() name:string; @IsEmail() email:string; @IsArray() @ValidateNested({each:true}) @Type(()=>PhoneDto) @IsOptional() phones?:PhoneDto[]; @ValidateNested() @Type(()=>AddressDto) @IsOptional() address?:AddressDto; @IsString() @IsOptional() resumeUrl?:string; @IsString() @IsOptional() linkedInUrl?:string; }

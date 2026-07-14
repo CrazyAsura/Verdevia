@@ -1,0 +1,48 @@
+# =============================================================================
+# VERDEVIA - Mobile Backend Isolated Svc
+# =============================================================================
+
+services:
+  mobile-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+    container_name: VERDEVIA_mobile_backend
+    env_file:
+      - path: .env
+        required: false
+    command: ["yarn", "start:prod"]
+    ports:
+      - "3334:3334"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-verdevia_user}
+      DB_PASSWORD: ${DB_PASSWORD:-verdevia_password}
+      DB_NAME: ${DB_NAME:-verdevia_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-verdevia_redis_password}
+      KAFKA_BROKERS: kafka:9094
+      KAFKA_CLIENT_ID: VERDEVIA-mobile-backend
+      KAFKA_CONSUMER_ENABLED: "true"
+      BACKEND_PORT: 3334
+    networks:
+      - VERDEVIA_mobile_net
+      - VERDEVIA_infra_net
+    volumes:
+      - ./database:/app/database
+
+networks:
+  VERDEVIA_infra_net:
+    name: VERDEVIA_infra_net
+    external: true
+  VERDEVIA_mobile_net:
+    name: VERDEVIA_mobile_net
+    external: true

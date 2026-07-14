@@ -1,0 +1,43 @@
+# =============================================================================
+# VERDEVIA - Mobile Gateway Isolated Svc
+# =============================================================================
+
+services:
+  mobile-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+    container_name: VERDEVIA_mobile_gateway
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    command: ["yarn", "start:prod"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MOBILE_GATEWAY_PORT: 3333
+      MOBILE_BACKEND_SUBGRAPH_URL: http://mobile-backend:3334/graphql
+      CHATBOT_BACKEND_SUBGRAPH_URL: http://chatbot-backend:3337/graphql
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+    networks:
+      - VERDEVIA_mobile_net
+      - VERDEVIA_chatbot_net
+      - VERDEVIA_proxy_net
+
+networks:
+  VERDEVIA_mobile_net:
+    name: VERDEVIA_mobile_net
+    external: true
+  VERDEVIA_chatbot_net:
+    name: VERDEVIA_chatbot_net
+    external: true
+  VERDEVIA_proxy_net:
+    name: VERDEVIA_proxy_net
+    external: true

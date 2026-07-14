@@ -1,0 +1,48 @@
+# =============================================================================
+# VERDEVIA - Web Gateway Isolated Svc
+# =============================================================================
+
+services:
+  web-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - YARN_REGISTRY=${YARN_REGISTRY:-https://registry.npmmirror.com}
+    container_name: VERDEVIA_web_gateway
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "3335:3335"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    command: ["yarn", "start:prod"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      WEB_GATEWAY_PORT: 3335
+      WEB_BACKEND_SUBGRAPH_URL: http://web-backend:3336/graphql
+      ADMIN_BACKEND_SUBGRAPH_URL: http://admin-backend:3338/graphql
+      CHATBOT_BACKEND_SUBGRAPH_URL: http://chatbot-backend:3337/graphql
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+    networks:
+      - VERDEVIA_web_net
+      - VERDEVIA_admin_net
+      - VERDEVIA_chatbot_net
+      - VERDEVIA_proxy_net
+
+networks:
+  VERDEVIA_web_net:
+    name: VERDEVIA_web_net
+    external: true
+  VERDEVIA_admin_net:
+    name: VERDEVIA_admin_net
+    external: true
+  VERDEVIA_chatbot_net:
+    name: VERDEVIA_chatbot_net
+    external: true
+  VERDEVIA_proxy_net:
+    name: VERDEVIA_proxy_net
+    external: true
